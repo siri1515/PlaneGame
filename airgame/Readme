@@ -1,0 +1,3 @@
+run:
+	javac -d bin src/com/Project/**/*.java
+	java -cp bin:resources com.Project.GameWindow
