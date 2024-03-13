@@ -1,11 +1,14 @@
 package com.Project;
 import com.Project.entities.PlayerPlane;
+import com.Project.entities.ScoreboardUI;
 import com.Project.strategy.DoubleBulletStrategy;
 import com.Project.strategy.ShootingContext;
 import com.Project.strategy.SingleBulletStrategy;
 import com.Project.factory.EnemyFactory;
+import com.Project.observer.ScoreManager;
 import com.Project.entities.Bullet;
 import com.Project.entities.Enemy;
+import com.Project.composite.*;
 
 // Swing component for creating panels within a window.
 import javax.swing.JPanel;
@@ -17,6 +20,8 @@ import java.awt.Color;
 import java.awt.event.*;
 // List interface for managing collections of objects.
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
 // A thread-safe version of ArrayList for managing collections that are expected to be modified by multiple threads.
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -35,6 +40,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     // Timing control for shooting
     private long lastShootTime = 0;
     private final long SHOOT_INTERVAL = 1000;
+	private ScoreManager scoreManager = new ScoreManager();
+	private ScoreboardUI scoreboardUI = new ScoreboardUI(scoreManager);
+	private List<ExplosionComponent> explosions = new CopyOnWriteArrayList<>();
 
     public GamePanel() {
         setBackground(Color.BLACK); // Sets the background color of the panel.
@@ -121,6 +129,33 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
+	private void checkCollisions() {
+		List<Bullet> bulletsToRemove = new ArrayList<>();
+		List<Enemy> enemiesToRemove = new ArrayList<>();
+
+		for (Bullet bullet : bullets) {
+			for (Enemy enemy : enemies) {
+				if (enemy.isHit(bullet)) {
+					bulletsToRemove.add(bullet); // Mark bullet for removal
+					enemy.reduceHealth(bullet.getDamage());
+					if (enemy.getHealth() <= 0) {
+						scoreManager.update(enemy);
+						enemiesToRemove.add(enemy); // Mark enemy for removal
+						CompositeExplosion explosion = new CompositeExplosion();
+						explosion.addComponent(new Explosion(enemy.getX(), enemy.getY(), 2000), 0);
+						explosion.addComponent(new Smoke(enemy.getX(), enemy.getY(), 2000), 1000);
+						explosions.add(explosion);
+					}
+					break; // Assuming one bullet can only hit one enemy
+				}
+			}
+		}
+
+		bullets.removeAll(bulletsToRemove);
+		enemies.removeAll(enemiesToRemove);
+	}
+
+
 	@Override
 	public void run() {
 		// The game loop runs indefinitely to keep the game active.
@@ -143,6 +178,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 			updateBullets();			
 			// Updates the player's plane position based on user input.
 			playerPlane.updatePosition(); 			
+
+			checkCollisions();
 			// Repaints the game panel to reflect any changes in the game state.
 			repaint();
 	
@@ -172,6 +209,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 		for (Enemy enemy : enemies) {
 			enemy.draw(g); // Draw each enemy on the panel
 		}
+
+		for (ExplosionComponent explosion : explosions) {
+			explosion.draw(g);
+		}
+		
+		scoreboardUI.draw(g);
 	}
 	
 }

@@ -11,6 +11,7 @@ public class Bullet {
     public static final int SPEED = 1;
     public static final int WIDTH = 5;
     public static final int HEIGHT = 5;
+	public static final int damage = 2;
     private Image image; 
 
     // Constructor that initializes the bullet's position and image.
@@ -34,6 +35,26 @@ public class Bullet {
     // Method to check if the bullet has moved off the screen.
     public boolean isOffScreen(int screenHeight) {
         return y < 0; // Returns true if the bullet's y-coordinate is less than 0, indicating it has moved off the top of the screen.
+    }
+
+	public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public int getDamage() {
+        return damage;
+    }
+
+    public int getWidth() {
+        return WIDTH;
+    }
+
+    public int getHeight() {
+        return HEIGHT;
     }
 }
 

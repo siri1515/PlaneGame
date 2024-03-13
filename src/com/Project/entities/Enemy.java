@@ -2,8 +2,11 @@ package com.Project.entities;
 import java.awt.Image;
 import java.awt.Graphics;
 import javax.swing.ImageIcon;
+import java.util.ArrayList;
+import java.util.List;
+import com.Project.observer.*;;
 
-public abstract class Enemy {
+public abstract class Enemy implements Event {
     // Position of the enemy on the game screen
     protected int x, y;
     // Speed at which the enemy moves
@@ -14,6 +17,7 @@ public abstract class Enemy {
     protected Image image;
     // Width and height of the enemy image
     protected int width, height;
+	private List<Observer> observers = new ArrayList<>();
 
     public Enemy(int x, int y, int speed, int health, String imagePath, int width, int height) {
         this.x = x;
@@ -23,6 +27,14 @@ public abstract class Enemy {
         this.image = new ImageIcon(imagePath).getImage(); // Load the image from the given path
         this.width = width;
         this.height = height;
+    }
+
+	public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 
     // Method to update the enemy's position
@@ -38,6 +50,47 @@ public abstract class Enemy {
     // Method to check if the enemy has moved off the bottom of the screen
     public boolean isOffScreen(int screenHeight) {
         return y > screenHeight; // Returns true if the enemy is below the screen
+    }
+
+	// Method to check if this enemy has been hit by a bullet
+	public boolean isHit(Bullet bullet) {
+        int bulletX = bullet.getX();
+        int bulletY = bullet.getY();
+        int bulletWidth = bullet.getWidth();
+        int bulletHeight = bullet.getHeight();
+
+        // collision detection
+        boolean hit = bulletX < x + width && bulletX + bulletWidth > x &&
+                      bulletY < y + height && bulletY + bulletHeight > y;
+        return hit;
+    }
+
+	public void reduceHealth(int damage) {
+		this.health = health - damage;
+		if (this.health <= 0) {
+            notifyObservers();
+        }
+    }
+
+	public int getHealth() {
+        return health;
+    }
+
+    @Override
+    public void registerObserver(Observer observer) {
+        observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(Observer observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers() {
+        for (Observer observer : observers) {
+            observer.update(this);
+        }
     }
 }
 

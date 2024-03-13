@@ -16,13 +16,13 @@ public class ShootingContext extends JPanel {
     // Method to change the current BulletStrategy.
     public void setBulletStrategy(BulletStrategy strategy) {
         this.bulletStrategy = strategy;
-		System.out.println("Bullet strategy changed to: " + strategy.toString());
+		//System.out.println("Bullet strategy changed to: " + strategy.toString());
     }
 
     // Executes the current BulletStrategy's shoot method, passing in the bullets list and plane coordinates.
     public void executeStrategy(List<Bullet> bullets, int planeX, int planeY) {
         bulletStrategy.shoot(bullets, planeX, planeY);
-        System.out.println("Executing " + bulletStrategy.toString() + " at x: " + planeX + ", y: " + planeY);
+        //System.out.println("Executing " + bulletStrategy.toString() + " at x: " + planeX + ", y: " + planeY);
     }
 
 }
