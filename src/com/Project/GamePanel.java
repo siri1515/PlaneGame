@@ -230,75 +230,68 @@ public void setState(GameState newState) {
 }
 
 
-	private void renderGameContent(Graphics g) {
-		// Draws the player's plane on the panel.
-		playerPlane.draw(g);	
-		// Iterates through each bullet in the bullets list to draw them.
-		// This loop calls the draw method of each Bullet object,
-		for (Bullet bullet : bullets) {
-			bullet.draw(g);
-		}		
-		// Iterates through each enemy in the enemies list to draw them.
-		// This loop calls the draw method of each Enemy object,
-		// This ensures that all enemies are rendered in their current positions.
-		for (Enemy enemy : enemies) {
-			enemy.draw(g); // Draw each enemy on the panel
-		}
+// Method to render game content like the player's plane, bullets, enemies, and explosions.
+private void renderGameContent(Graphics g) {
+    playerPlane.draw(g); // Draw the player's plane on the game panel.
+    
+    // Loop through and draw each bullet in the game.
+    for (Bullet bullet : bullets) {
+        bullet.draw(g);
+    }
+    
+    // Loop through and draw each enemy in the game.
+    for (Enemy enemy : enemies) {
+        enemy.draw(g);
+    }
 
-		for (ExplosionComponent explosion : explosions) {
-			explosion.draw(g);
-		}
-		
-		scoreboardUI.draw(g);
-	}
+    // Loop through and draw each explosion effect.
+    for (ExplosionComponent explosion : explosions) {
+        explosion.draw(g);
+    }
+    
+    // Draw the game's scoreboard UI.
+    scoreboardUI.draw(g);
+}
 
+// Main game loop that runs continuously.
+@Override
+public void run() {
+    while (true) {
+        createEnemy(); // Spawn new enemies at specified intervals.
+        updateEnemies(); // Update enemy positions and check for off-screen removal.
+        
+        long currentTime = System.currentTimeMillis();
+        // Check if enough time has passed to shoot again.
+        if (currentTime - lastShootTime > SHOOT_INTERVAL) {
+            // Execute the current shooting strategy (single or double bullets).
+            shootingContext.executeStrategy(bullets, playerPlane.getX(), playerPlane.getY());
+            lastShootTime = currentTime; // Update the time of the last shot.
+        }
+        
+        updateBullets(); // Update bullet positions and remove off-screen bullets.
+        playerPlane.updatePosition(); // Update the player's plane position based on input.
+        checkCollisions(); // Check for collisions between bullets and enemies.
 
-	@Override
-	public void run() {
-		// The game loop runs indefinitely to keep the game active.
-		while (true) {
-			// Calls method to generate new enemies at defined intervals.
-			createEnemy();
-		
-			// Updates the position of Enemies, removing any that are off-screen.
-			updateEnemies();		
-			// Capture the current time
-			long currentTime = System.currentTimeMillis();
-			// Checks if it's time to shoot again based on the shooting interval.
-			if (currentTime - lastShootTime > SHOOT_INTERVAL) {
-				// Executes the current shooting strategy to shoot bullets, strategy design pattern
-				shootingContext.executeStrategy(bullets, playerPlane.getX(), playerPlane.getY());
-				// Updates the last shooting time to the current time.
-				lastShootTime = currentTime;
-			}
-			
-			// Updates the position of bullets, removing any that are off-screen.
-			updateBullets();			
-			// Updates the player's plane position based on user input.
-			playerPlane.updatePosition(); 			
+        repaint(); // Repaint the panel to reflect updated game state.
+        
+        try {
+            Thread.sleep(20); // Pause the loop briefly to achieve a frame rate of ~50 FPS.
+        } catch (InterruptedException e) {
+            e.printStackTrace(); // Handle any interrupt exceptions during sleep.
+        }
+    }
+}
 
-			checkCollisions();
+// Custom paint component method to handle game rendering.
+@Override
+protected void paintComponent(Graphics g) {
+    super.paintComponent(g); // Perform standard painting tasks.
+    // Render game content only if the game has started.
+    if (currentState instanceof StartedState) {
+        renderGameContent(g);
+    }
+}
 
-			// Repaints the game panel to reflect any changes in the game state.
-			repaint();
-	
-			// Pauses the game loop briefly to control the update rate of the game.
-			try {
-				Thread.sleep(20); // 20 milliseconds pause for a game update rate of 50 FPS approximately.
-			} catch (InterruptedException e) {
-				e.printStackTrace(); // Prints an error message if the thread's sleep is interrupted.
-			}
-		}
-	}	
-
-	@Override
-	protected void paintComponent(Graphics g) {
-		// Calls the superclass's paintComponent method to handle standard painting tasks.
-		super.paintComponent(g);	
-		if (currentState instanceof StartedState) {
-			renderGameContent(g);
-		}
-	}
 	
 }
 
