@@ -1,34 +1,38 @@
 package com.Project.entities;
 import java.awt.Image;
 import java.awt.Graphics;
-import javax.swing.ImageIcon;
 import java.util.ArrayList;
 import java.util.List;
-import com.Project.observer.*;;
 
+import com.Project.flyweight.EnemyFlyweight;
+import com.Project.observer.*;
+
+// The abstract Enemy class represents the common characteristics and behaviors of enemies in the game.
+// This class implements the Event interface to allow for the Observer pattern implementation.
 public abstract class Enemy implements Event {
-    // Position of the enemy on the game screen
+    // X and Y coordinates for the enemy's position on the screen.
     protected int x, y;
-    // Speed at which the enemy moves
-    protected int speed;
-    // Health points of the enemy
+	
+	// The EnemyFlyweight object that contains shared state amongst similar types of enemies.
+    // This is part of the Flyweight pattern to save memory by sharing common data.
+	protected EnemyFlyweight flyweight;
+
+    // Current health of the enemy. Individual for each enemy, not part of the Flyweight.
     protected int health;
-    // Image representing the enemy visually
-    protected Image image;
-    // Width and height of the enemy image
-    protected int width, height;
+
+    // A list to hold all observers that are observing this enemy.
+    // Part of the Observer design pattern to allow for notification of state changes.
 	private List<Observer> observers = new ArrayList<>();
 
-    public Enemy(int x, int y, int speed, int health, String imagePath, int width, int height) {
+    // Constructor initializes an enemy with its unique state (x, y, health) and its shared state (flyweight).
+	public Enemy(int x, int y, int health, EnemyFlyweight flyweight) {
         this.x = x;
         this.y = y;
-        this.speed = speed;
         this.health = health;
-        this.image = new ImageIcon(imagePath).getImage(); // Load the image from the given path
-        this.width = width;
-        this.height = height;
+        this.flyweight = flyweight;
     }
 
+    // Getters for the position coordinates.
 	public int getX() {
         return x;
     }
@@ -37,55 +41,59 @@ public abstract class Enemy implements Event {
         return y;
     }
 
-    // Method to update the enemy's position
+    // Moves the enemy down the screen using the speed defined in the shared flyweight.
     public void move() {
-        y += speed; // Move the enemy down the screen by its speed
+        y += flyweight.getSpeed();
     }
 
-    // Method to draw the enemy on the screen
-    public void draw(Graphics g) {
-        g.drawImage(image, x, y, width, height, null); // Draw the enemy image at its current position
+    // Draws the enemy on the screen using its current position and the image from the shared flyweight.
+	public void draw(Graphics g) {
+        g.drawImage(flyweight.getImage(), x, y, flyweight.getWidth(), flyweight.getHeight(), null);
     }
 
-    // Method to check if the enemy has moved off the bottom of the screen
+    // Checks if the enemy has passed beyond the bottom edge of the screen.
     public boolean isOffScreen(int screenHeight) {
-        return y > screenHeight; // Returns true if the enemy is below the screen
+        return y > screenHeight;
     }
 
-	// Method to check if this enemy has been hit by a bullet
+	// Checks if the enemy has been hit by a bullet using simple collision detection.
 	public boolean isHit(Bullet bullet) {
         int bulletX = bullet.getX();
         int bulletY = bullet.getY();
         int bulletWidth = bullet.getWidth();
         int bulletHeight = bullet.getHeight();
 
-        // collision detection
-        boolean hit = bulletX < x + width && bulletX + bulletWidth > x &&
-                      bulletY < y + height && bulletY + bulletHeight > y;
+        boolean hit = bulletX < x + flyweight.getWidth() && bulletX + bulletWidth > x &&
+                      bulletY < y + flyweight.getHeight() && bulletY + bulletHeight > y;
         return hit;
     }
 
+    // Reduces the enemy's health by a specified amount and notifies observers if health drops to 0 or below.
 	public void reduceHealth(int damage) {
-		this.health = health - damage;
+		this.health -= damage;
 		if (this.health <= 0) {
             notifyObservers();
         }
     }
 
+    // Getter for the enemy's health.
 	public int getHealth() {
         return health;
     }
 
+    // Registers an observer to this enemy.
     @Override
     public void registerObserver(Observer observer) {
         observers.add(observer);
     }
 
+    // Removes an observer from this enemy.
     @Override
     public void removeObserver(Observer observer) {
         observers.remove(observer);
     }
 
+    // Notifies all registered observers of a state change.
     @Override
     public void notifyObservers() {
         for (Observer observer : observers) {
@@ -93,6 +101,3 @@ public abstract class Enemy implements Event {
         }
     }
 }
-
-
-
