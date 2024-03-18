@@ -8,6 +8,5 @@ public interface BulletStrategy {
     void shoot(List<Bullet> bullets, int planeX, int planeY);
     // The method is expected to handle the logic for shooting bullets. This could involve adding new Bullet
     // objects to the list based on the current position of the plane represented by planeX and planeY.
-	@Override
-    String toString(); 
+    String toString();
 }

@@ -8,8 +8,7 @@ import com.Project.flyweight.EnemyFlyweight;
 import com.Project.observer.*;
 
 // The abstract Enemy class represents the common characteristics and behaviors of enemies in the game.
-// This class implements the Event interface to allow for the Observer pattern implementation.
-public abstract class Enemy implements Event {
+public abstract class Enemy {
     // X and Y coordinates for the enemy's position on the screen.
     protected int x, y;
 	
@@ -82,19 +81,16 @@ public abstract class Enemy implements Event {
     }
 
     // Registers an observer to this enemy.
-    @Override
     public void registerObserver(Observer observer) {
         observers.add(observer);
     }
 
     // Removes an observer from this enemy.
-    @Override
     public void removeObserver(Observer observer) {
         observers.remove(observer);
     }
 
     // Notifies all registered observers of a state change.
-    @Override
     public void notifyObservers() {
         for (Observer observer : observers) {
             observer.update(this);

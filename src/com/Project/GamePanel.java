@@ -85,6 +85,27 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         startGame(); // Start the game loop.
     }
 
+	// Sets the game's current state to a new state and initiates the state's behavior.
+	// enterState() in Gamestate class
+	public void setState(GameState newState) {
+		this.currentState = newState; // Update the current state to the new state.
+		newState.enterState(); // Call the enterState method of the new state to perform any initial actions required by this state.
+	}
+
+	// Initializes the start button with its properties and action listener.
+	private void initializeStartButton() {
+		startButton = new JButton("Start"); // Create a new button with the label "Start".
+		// Add an action listener to the button. When clicked, it changes the game's state to Started.
+		startButton.addActionListener(e -> setState(new StartedState(this)));
+		add(startButton); // Add the button to the JPanel (the game panel).
+		startButton.setVisible(false); // Initially, the start button is not visible.
+	}
+
+	// Controls the visibility of the start button within the game panel.
+	public void showStartButton(boolean show) {
+		startButton.setVisible(show); // Set the visibility of the start button based on the 'show' parameter.
+	}
+
     // Handles key press events for controlling the game.
     @Override
     public void keyPressed(KeyEvent e) {
@@ -207,90 +228,68 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 		bullets.removeAll(bulletsToRemove);
 		enemies.removeAll(enemiesToRemove);
 	}
-	
 
-// Initializes the start button with its properties and action listener.
-private void initializeStartButton() {
-    startButton = new JButton("Start"); // Create a new button with the label "Start".
-    // Add an action listener to the button. When clicked, it changes the game's state to Started.
-    startButton.addActionListener(e -> setState(new StartedState(this)));
-    add(startButton); // Add the button to the JPanel (the game panel).
-    startButton.setVisible(false); // Initially, the start button is not visible.
-}
+	// Method to render game content like the player's plane, bullets, enemies, and explosions.
+	private void renderGameContent(Graphics g) {
+		playerPlane.draw(g); // Draw the player's plane on the game panel.
+		
+		// Loop through and draw each bullet in the game.
+		for (Bullet bullet : bullets) {
+			bullet.draw(g);
+		}
+		
+		// Loop through and draw each enemy in the game.
+		for (Enemy enemy : enemies) {
+			enemy.draw(g);
+		}
 
-// Controls the visibility of the start button within the game panel.
-public void showStartButton(boolean show) {
-    startButton.setVisible(show); // Set the visibility of the start button based on the 'show' parameter.
-}
+		// Loop through and draw each explosion effect.
+		for (ExplosionComponent explosion : explosions) {
+			explosion.draw(g);
+		}
+		
+		// Draw the game's scoreboard UI.
+		scoreboardUI.draw(g);
+	}
 
-// Sets the game's current state to a new state and initiates the state's behavior.
-public void setState(GameState newState) {
-    this.currentState = newState; // Update the current state to the new state.
-    newState.enterState(); // Call the enterState method of the new state to perform any initial actions required by this state.
-}
+	// Main game loop that runs continuously.
+	@Override
+	public void run() {
+		while (true) {
+			createEnemy(); // Spawn new enemies at specified intervals.
+			updateEnemies(); // Update enemy positions and check for off-screen removal.
+			
+			long currentTime = System.currentTimeMillis();
+			// Check if enough time has passed to shoot again.
+			if (currentTime - lastShootTime > SHOOT_INTERVAL) {
+				// Execute the current shooting strategy (single or double bullets).
+				shootingContext.executeStrategy(bullets, playerPlane.getX(), playerPlane.getY());
+				lastShootTime = currentTime; // Update the time of the last shot.
+			}
+			
+			updateBullets(); // Update bullet positions and remove off-screen bullets.
+			playerPlane.updatePosition(); // Update the player's plane position based on input.
+			checkCollisions(); // Check for collisions between bullets and enemies.
 
+			repaint(); // Repaint the panel to reflect updated game state.
+			
+			try {
+				Thread.sleep(20); // Pause the loop briefly to achieve a frame rate of ~50 FPS.
+			} catch (InterruptedException e) {
+				e.printStackTrace(); // Handle any interrupt exceptions during sleep.
+			}
+		}
+	}
 
-// Method to render game content like the player's plane, bullets, enemies, and explosions.
-private void renderGameContent(Graphics g) {
-    playerPlane.draw(g); // Draw the player's plane on the game panel.
-    
-    // Loop through and draw each bullet in the game.
-    for (Bullet bullet : bullets) {
-        bullet.draw(g);
-    }
-    
-    // Loop through and draw each enemy in the game.
-    for (Enemy enemy : enemies) {
-        enemy.draw(g);
-    }
-
-    // Loop through and draw each explosion effect.
-    for (ExplosionComponent explosion : explosions) {
-        explosion.draw(g);
-    }
-    
-    // Draw the game's scoreboard UI.
-    scoreboardUI.draw(g);
-}
-
-// Main game loop that runs continuously.
-@Override
-public void run() {
-    while (true) {
-        createEnemy(); // Spawn new enemies at specified intervals.
-        updateEnemies(); // Update enemy positions and check for off-screen removal.
-        
-        long currentTime = System.currentTimeMillis();
-        // Check if enough time has passed to shoot again.
-        if (currentTime - lastShootTime > SHOOT_INTERVAL) {
-            // Execute the current shooting strategy (single or double bullets).
-            shootingContext.executeStrategy(bullets, playerPlane.getX(), playerPlane.getY());
-            lastShootTime = currentTime; // Update the time of the last shot.
-        }
-        
-        updateBullets(); // Update bullet positions and remove off-screen bullets.
-        playerPlane.updatePosition(); // Update the player's plane position based on input.
-        checkCollisions(); // Check for collisions between bullets and enemies.
-
-        repaint(); // Repaint the panel to reflect updated game state.
-        
-        try {
-            Thread.sleep(20); // Pause the loop briefly to achieve a frame rate of ~50 FPS.
-        } catch (InterruptedException e) {
-            e.printStackTrace(); // Handle any interrupt exceptions during sleep.
-        }
-    }
-}
-
-// Custom paint component method to handle game rendering.
-@Override
-protected void paintComponent(Graphics g) {
-    super.paintComponent(g); // Perform standard painting tasks.
-    // Render game content only if the game has started.
-    if (currentState instanceof StartedState) {
-        renderGameContent(g);
-    }
-}
+	// Custom paint component method to handle game rendering.
+	@Override
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g); // Perform standard painting tasks.
+		// Render game content only if the game has started.
+		if (currentState instanceof StartedState) {
+			renderGameContent(g);
+		}
+	}
 
 	
 }
