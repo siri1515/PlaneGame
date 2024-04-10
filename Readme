@@ -1,3 +1,6 @@
 run:
 	javac -d bin src/com/Project/**/*.java
 	java -cp bin:resources com.Project.GameWindow
+
+demo video link:
+https://drive.google.com/file/d/1MFvv39i7SCihnxlR8xlUR6drjUZQGGp3/view?usp=sharing
